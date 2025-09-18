@@ -1,3 +1,10 @@
+## Controls
+
+|Key|Function|
+|:--:|:--:|
+|<kbd>F</kbd>|Fullscreen Toggle|
+|<kbd>V</kbd>|VSync Toggle|
+|<kbd>Esc</kbd>|Exit Program|
 
 ## Installation
 

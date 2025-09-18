@@ -20,7 +20,8 @@ int main()
         glfwPollEvents();
     }
 
-    glfwTerminate();
+    delete window;
+
     Logger::info("App has ended");
     return 0;
 }
