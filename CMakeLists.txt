@@ -10,6 +10,11 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Cesta k vcpkg toolchain
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+
+find_package(OpenCV REQUIRED)
+
 # Collect your sources
 file(GLOB SOURCES "src/lib/*.cpp")
 
