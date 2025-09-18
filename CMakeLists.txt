@@ -12,13 +12,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # vcpkg toolchain
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 
-find_package(OpenCV REQUIRED)
-find_package(GLEW REQUIRED)
+find_package(OpenCV CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
-find_package(OpenGL REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 # Collect your sources
-file(GLOB SOURCES "src/lib/*.cpp")
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 # Executable target (drop .exe on macOS/Linux)
 add_executable(app main.cpp ${SOURCES})
@@ -27,4 +27,4 @@ add_executable(app main.cpp ${SOURCES})
 target_include_directories(app PRIVATE ${OpenCV_INCLUDE_DIRS})
 
 # Link libraries using vcpkg targets
-target_link_libraries(app PRIVATE ${OpenCV_LIBS} GLEW::GLEW glfw OpenGL::GL)
+target_link_libraries(app PRIVATE ${OpenCV_LIBS} GLEW::GLEW glfw glm::glm)
