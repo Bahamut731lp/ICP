@@ -3,14 +3,17 @@
 
 int main()
 {
+    Logger::info("Application has started.");
+    
     cv::Mat img = cv::imread("test.jpg");
     if (img.empty())
     {
-        std::cout << "Could not read the image\n";
+        Logger::error("Image could not be read.");
         return 1;
     }
     cv::imshow("Image", img);
     cv::waitKey(0);
-    Logger::info("New Application has been constructed.");
+
+    Logger::info("Application reached end of it's lifecycle.");
     return 0;
 }
