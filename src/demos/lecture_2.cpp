@@ -96,7 +96,7 @@ cv::Mat get_faces_in_image(cv::Mat &frame)
         
 	if (faces.size() > 0)
 	{
-        cv::rectangle(frame, faces[0], (0, 155, 155), 30);
+        cv::rectangle(frame, faces[0], (0, 155, 255), 5);
 	}
 
     frame.copyTo(scene_cross);
