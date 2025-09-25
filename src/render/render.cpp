@@ -23,6 +23,19 @@ GlRender::~GlRender()
     }
 }
 
+void GlRender::setScale(float s)
+{
+    winScale = s;
+}
+
+void GlRender::setSize(int width, int height) {
+    winWidth = width;
+    winHeight = height;
+    frameWidth = width;
+    frameHeight = height;
+    glfwSetWindowSize(this->window, width, height);
+}
+
 void GlRender::init()
 {
     if (window)
@@ -127,6 +140,12 @@ GLuint GlRender ::getTextureID(const cv::Mat &mat)
 
 void GlRender ::draw(const cv::Mat &frame)
 {
+    frameWidth = frame.cols;
+    frameHeight = frame.rows;
+    winWidth = winScale * frame.cols;
+    winHeight = winScale * frame.rows;
+    window_aspect_ratio = frameWidth / (double)frameHeight;
+
     GLuint tex = getTextureID(frame);
 
     glClearColor(0.1, 0.1, 0.1, 0);
@@ -150,41 +169,6 @@ void GlRender ::draw(const cv::Mat &frame)
 
     glDeleteTextures(1, &tex);
     glDisable(GL_TEXTURE_2D);
-}
-
-int GlRender::start(cv::Mat img)
-{
-    if (!initialized)
-    {
-        frameWidth = img.cols;
-        frameHeight = img.rows;
-        winWidth = winScale * img.cols;
-        winHeight = winScale * img.rows;
-        window_aspect_ratio = frameWidth / (double)frameHeight;
-        init();
-    }
-
-    if (!initialized)
-    {
-        Logger::error("Window not initialized");
-        return 2;
-    }
-
-    while (1)
-    {
-        if (glfwWindowShouldClose(window))
-            break;
-
-        if (img.empty())
-            break;
-
-        draw(img);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    return 0;
 }
 
 void GlRender::setFullscreen(bool fullscreen)

@@ -1,5 +1,10 @@
 #include "lecture_2.hpp"
 
+cv::CascadeClassifier face_cascade = cv::CascadeClassifier("resources/haarcascade_frontalface_default.xml");
+cv::Point2f center(0.0f, 0.0f);
+cv::Mat scene_cross;
+cv::Mat scene_grey;
+
 cv::Mat3b get_lightbulb_image_processed() {
     cv::Mat frame = cv::imread("resources/lightbulb.jpg");
     if (frame.empty()) {
@@ -52,7 +57,7 @@ cv::Mat3b get_lightbulb_image_processed() {
     auto end = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "Elapsed time: " << elapsed_seconds.count() << "sec" << std::endl;
+    Logger::debug(std::string("Elapsed time: " + std::to_string(elapsed_seconds.count()) + "sec"));
 
     if (white_pixel_count > 0) {
         center.x /= white_pixel_count;
@@ -81,4 +86,19 @@ cv::Mat3b get_lightbulb_image_processed() {
     frame2.copyTo(res(cv::Rect(frame.cols, 0, frame2.cols, frame2.rows)));
 
     return res;
+}
+
+cv::Mat get_faces_in_image(cv::Mat &frame)
+{
+	cv::cvtColor(frame, scene_grey, cv::COLOR_BGR2GRAY);
+	std::vector<cv::Rect> faces;
+	face_cascade.detectMultiScale(scene_grey, faces);
+        
+	if (faces.size() > 0)
+	{
+        cv::rectangle(frame, faces[0], (0, 155, 155), 30);
+	}
+
+    frame.copyTo(scene_cross);
+    return scene_cross;
 }
