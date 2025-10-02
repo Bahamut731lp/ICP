@@ -90,13 +90,27 @@ cv::Mat3b get_lightbulb_image_processed() {
 
 cv::Mat get_faces_in_image(cv::Mat &frame)
 {
-	cv::cvtColor(frame, scene_grey, cv::COLOR_BGR2GRAY);
+	
+	cv::Mat small_frame;
+	double scale = 0.5;
+	cv::resize(frame, small_frame, cv::Size(), scale, scale, cv::INTER_LINEAR);
+
+	cv::cvtColor(small_frame, scene_grey, cv::COLOR_BGR2GRAY);
+	cv::equalizeHist(scene_grey, scene_grey); 
+
 	std::vector<cv::Rect> faces;
-	face_cascade.detectMultiScale(scene_grey, faces);
-        
+	face_cascade.detectMultiScale(scene_grey, faces, 1.2, 5, 0, cv::Size(30, 30));
+
 	if (faces.size() > 0)
 	{
-        cv::rectangle(frame, faces[0], (0, 155, 255), 5);
+		// back to original size
+		cv::Rect scaled_face(
+			faces[0].x / scale,
+			faces[0].y / scale,
+			faces[0].width / scale,
+			faces[0].height / scale
+		);
+        cv::rectangle(frame, scaled_face, cv::Scalar(0, 155, 255), 5);
 	}
 
     frame.copyTo(scene_cross);
