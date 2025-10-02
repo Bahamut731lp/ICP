@@ -6,6 +6,14 @@
 |<kbd>V</kbd>|VSync Toggle|
 |<kbd>Esc</kbd>|Exit Program|
 
+## Release build
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release -B build
+cmake --build build
+./build/app
+```
+
 ## Installation
 
 ### 1. Install vcpkg

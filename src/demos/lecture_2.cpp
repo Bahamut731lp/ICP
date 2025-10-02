@@ -99,7 +99,7 @@ cv::Mat get_faces_in_image(cv::Mat &frame)
 	cv::equalizeHist(scene_grey, scene_grey); 
 
 	std::vector<cv::Rect> faces;
-	face_cascade.detectMultiScale(scene_grey, faces, 1.2, 5, 0, cv::Size(30, 30));
+	face_cascade.detectMultiScale(scene_grey, faces, 1.2, 3, 0);
 
 	if (faces.size() > 0)
 	{

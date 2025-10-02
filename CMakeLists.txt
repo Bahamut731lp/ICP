@@ -15,7 +15,7 @@ set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CAC
 find_package(OpenCV CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
+find_package(glm CONFIG)
 
 # Collect your sources
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
@@ -27,4 +27,8 @@ add_executable(app main.cpp ${SOURCES})
 target_include_directories(app PRIVATE ${OpenCV_INCLUDE_DIRS})
 
 # Link libraries using vcpkg targets
-target_link_libraries(app PRIVATE ${OpenCV_LIBS} GLEW::GLEW glfw glm::glm)
+if(glm_FOUND)
+    target_link_libraries(app PRIVATE ${OpenCV_LIBS} GLEW::GLEW glfw glm::glm)
+else()
+    target_link_libraries(app PRIVATE ${OpenCV_LIBS} GLEW::GLEW glfw)
+endif()
