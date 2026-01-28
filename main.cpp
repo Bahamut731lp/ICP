@@ -1,10 +1,9 @@
+#include "src/render/render.hpp"
 #include "src/lib/logger.hpp"
 #include "src/lib/fps_meter.hpp"
-#include "src/render/render.hpp"
+#include "src/lib/camera.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>
-
-#include "src/demos/lecture_3.hpp"
 
 int main()
 {
@@ -23,7 +22,7 @@ int main()
         Logger::info("Source: Width: " + std::to_string(capture.get(cv::CAP_PROP_FRAME_WIDTH)) + "; Height: " + std::to_string(capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
     }
 
-    cv::Mat frame, display_frame;
+    cv::Mat frame;
     cv::Point2f tracking_center(0.0f, 0.0f);
 
     // display new value only once per interval (default = 1.0s)
@@ -39,41 +38,33 @@ int main()
             break;
 
         capture.read(frame);
-
+        if (frame.empty()) {
+            continue; // Skip this loop iteration if the frame is null
+            Logger::warning("Frame is empty.");
+        }
+        /*
+            =======================
+            FRAME PROCESSING START
+            =======================
+        */
         if (frame.empty())
         {
             Logger::error("End of file");
             break;
         }
 
-        get_faces_in_image(frame, face_count);
-
-        if (face_count == 0)
-        {
-            display_frame = get_lock_screen_image(frame.cols, frame.rows);
-        }
-        else if (face_count == 1)
-        {
-            track_object_in_frame(frame, tracking_center);
-            display_frame = frame;
-        }
-        else
-        {
-            display_frame = get_warning_screen_image(frame.cols, frame.rows);
-        }
-
+        render.draw(frame);
         if (FPS.is_updated())
         {
             Logger::info("FPS: " + std::to_string(FPS.get()));
         }
+        /*
+            =======================
+            FRAME PROCESSING END
+            =======================
+        */
 
-        cv::putText(display_frame, "FPS: " + std::to_string(static_cast<int>(FPS.get())),
-                    cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0,
-                    cv::Scalar(0, 255, 0), 2);
-
-        render.draw(display_frame);
         FPS.update();
-
         glfwSwapBuffers(render.window);
         glfwPollEvents();
     }

@@ -3,7 +3,16 @@
     "glew",
     "glfw3",
     "glm",
-    "opencv4",
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": [
+        "dnn",
+        "jpeg",
+        "png",
+        "quirc"
+      ]
+    },
     "opengl"
   ]
 }

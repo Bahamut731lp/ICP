@@ -32,7 +32,10 @@ export VCPKG_ROOT=/path/to/vcpkg
 ### 2. Install Dependencies
 
 ```bash
-vcpkg install glew glfw3 glm opencv4 opengl
+sudo apt install libxmu-dev libxi-dev libgl-dev bison
+sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+sudo apt install autoconf autoconf-archive automake libtool
+vcpkg install
 ```
 
 ### 3. Clean, Build and Run

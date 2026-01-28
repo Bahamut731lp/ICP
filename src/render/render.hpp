@@ -1,8 +1,14 @@
 #pragma once
+// 1. Extension Loaders FIRST
 #include <GL/glew.h>
+
+// 2. Windowing/System headers SECOND
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <iostream>
+#include <array>
+
+// 3. Complex libraries (OpenCV, etc.) LAST
 #include <opencv2/opencv.hpp>
 
 #include "../lib/logger.hpp"
