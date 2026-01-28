@@ -1,14 +1,27 @@
-#include "src/render/render.hpp"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "glm/glm.hpp"
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
+#include "src/lib/render.hpp"
 #include "src/lib/logger.hpp"
 #include "src/lib/fps_meter.hpp"
 #include "src/lib/camera.hpp"
+#include "src/lib/world.hpp"
+
 #include <opencv2/opencv.hpp>
 #include <iostream>
+
+float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+float delta = 0.0f;
 
 int main()
 {
     Logger::info("App has started");
-    GlRender render;
+    GlRender renderer;
 
     cv::VideoCapture capture = cv::VideoCapture(0, cv::CAP_ANY);
 
@@ -23,37 +36,40 @@ int main()
     }
 
     cv::Mat frame;
-    cv::Point2f tracking_center(0.0f, 0.0f);
-
-    // display new value only once per interval (default = 1.0s)
     fps_meter FPS(1.0s);
 
-    render.init();
-    render.setScale(1);
-    int face_count = 0;
+    renderer.init();
+    renderer.setScale(1);
 
     while (1)
     {
-        if (glfwWindowShouldClose(render.window))
+        glfwPollEvents();
+        
+        if (glfwWindowShouldClose(renderer.window))
             break;
 
-        capture.read(frame);
-        if (frame.empty()) {
-            continue; // Skip this loop iteration if the frame is null
-            Logger::warning("Frame is empty.");
-        }
-        /*
-            =======================
-            FRAME PROCESSING START
-            =======================
-        */
-        if (frame.empty())
-        {
-            Logger::error("End of file");
-            break;
-        }
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-        render.draw(frame);
+        // 1. Create a simple window
+        ImGui::Begin("OpenGL Control Panel"); 
+        ImGui::Text("System Info:");
+        ImGui::Text("GPU: %s", renderer.renderer.c_str()); 
+        ImGui::Text("Ver: %s", renderer.version.c_str());
+        ImGui::Separator();
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
+            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+        if (ImGui::Button("Close App")) {
+            glfwSetWindowShouldClose(renderer.window, true);
+        }
+        
+        ImGui::End();
+        
+        World::render(&renderer, delta);
+        ImGui::Render();
+        
         if (FPS.is_updated())
         {
             Logger::info("FPS: " + std::to_string(FPS.get()));
@@ -65,10 +81,25 @@ int main()
         */
 
         FPS.update();
-        glfwSwapBuffers(render.window);
-        glfwPollEvents();
+    
+        int display_w, display_h;
+        glfwGetFramebufferSize(renderer.window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Draw ImGui over your scene
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(renderer.window);
     }
 
     Logger::info("App has ended");
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(renderer.window);
+    glfwTerminate();
     return 0;
 }

@@ -1,7 +1,29 @@
 #include "render.hpp"
+#include "logger.hpp"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <thread>
 
+Camera* GlRender::cam = nullptr;
 double window_aspect_ratio = 1.0;
+
+std::string glStringToString(GLenum name) {
+    const GLubyte* str = glGetString(name);
+    return str ? std::string(reinterpret_cast<const char*>(str)) : "Unknown";
+}
+
+std::string getProfile() {
+    GLint profileMask = 0;
+    glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
+
+    if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) 
+        return "Core Profile";
+    if (profileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) 
+        return "Compatibility Profile";
+    
+    return "Unknown Profile";
+}
 
 void window_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -36,6 +58,50 @@ void GlRender::setSize(int width, int height) {
     glfwSetWindowSize(this->window, width, height);
 }
 
+void GlRender::setImguiParameters() {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true); 
+    ImGui_ImplOpenGL3_Init("#version 460");
+}
+
+void GlRender::setGlfwParameters() {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
+    glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, winWidth, winHeight, 0.0, 0.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void GlRender::setGlfwWindowInstance() {
+    window = glfwCreateWindow(winWidth, winHeight, winname.c_str(), nullptr, nullptr);
+    if (!window)
+    {
+        Logger::error("Failed to create GL window.");
+        glfwTerminate();
+        exit(1);
+    }
+
+    glfwSetWindowPos(window, winPos[0], winPos[1]);
+    glfwMakeContextCurrent(window);
+}
+
+void GlRender::setGlfwCallbacks() {
+    glfwSwapInterval(1);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowSizeCallback(window, window_size_callback);
+    glfwSetWindowUserPointer(window, this);
+}
+
 void GlRender::init()
 {
     if (window)
@@ -58,20 +124,8 @@ void GlRender::init()
         return;
     }
 
-    glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
-    glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
-
-    window = glfwCreateWindow(winWidth, winHeight, winname.c_str(), nullptr, nullptr);
-
-    if (!window)
-    {
-        Logger::error("Failed to create GL window.");
-        glfwTerminate();
-        exit(1);
-    }
-
-    glfwSetWindowPos(window, winPos[0], winPos[1]);
-    glfwMakeContextCurrent(window);
+    setGlfwParameters();
+    setGlfwWindowInstance();
 
     if (glewInit() != GLEW_OK)
     {
@@ -79,22 +133,26 @@ void GlRender::init()
         glfwTerminate();
         exit(1);
     }
-
-    glfwSwapInterval(1);
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwSetWindowUserPointer(window, this);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, winWidth, winHeight, 0.0, 0.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
+    
+    setImguiParameters();
+    setGlfwCallbacks();
 
     int frameWidth, frameHeight;
     glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
     glViewport(0, 0, frameWidth, frameHeight);
 
     initialized = true;
+    version = glStringToString(GL_VERSION);
+    profile = getProfile();
+    renderer = glStringToString(GL_RENDERER);
+    vendor = glStringToString(GL_VENDOR);
+    shadingLanguage = glStringToString(GL_SHADING_LANGUAGE_VERSION);
+
+    Logger::info("Version: " + version);
+    Logger::info("Profile: " + profile);
+    Logger::info("Render: " + renderer);
+    Logger::info("Vendor: " + vendor);
+    Logger::info("Shading Language: " + shadingLanguage);
 }
 
 GLuint GlRender ::getTextureID(const cv::Mat &mat)

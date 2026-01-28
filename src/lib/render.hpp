@@ -1,4 +1,5 @@
 #pragma once
+
 // 1. Extension Loaders FIRST
 #include <GL/glew.h>
 
@@ -11,7 +12,8 @@
 // 3. Complex libraries (OpenCV, etc.) LAST
 #include <opencv2/opencv.hpp>
 
-#include "../lib/logger.hpp"
+#include "logger.hpp"
+#include "camera.hpp"
 
 class GlRender
 {
@@ -24,15 +26,22 @@ public:
     void setFullscreen(bool fullscreen);
     void setVsync(bool vsync);
 
+    std::string version;
+    std::string profile;
+    std::string renderer;
+    std::string vendor;
+    std::string shadingLanguage;
+
     bool isVSynced() const;
     bool isFullscreen() const;
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-  
-    GLuint getTextureID(const cv::Mat &mat);
+
     void init();
     void draw(const cv::Mat& frame);
-
-    GLFWwindow *window     = nullptr;
+    
+    GLuint getTextureID(const cv::Mat &mat);
+    GLFWwindow *window = nullptr;
+    static Camera *cam; 
 private:
     std::string winname = "ICP";
     std::array<int,2>  winPos = {0,0};
@@ -58,4 +67,9 @@ private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     void handle_key_press(int key, int action);
     void onKeyEvent(int key, int action);
+
+    void setImguiParameters();
+    void setGlfwParameters();
+    void setGlfwWindowInstance();
+    void setGlfwCallbacks();
 };

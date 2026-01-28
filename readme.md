@@ -68,6 +68,13 @@ cmake --build build -j
 ```bash
 ./build/app
 ```
+
+#### Use Nvidia Graphics Card
+```bash
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia 
+```
+
 ## Errory 
 
 ```bash
