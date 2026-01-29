@@ -25,6 +25,10 @@ public:
     void setSize(int width, int height);
     void setFullscreen(bool fullscreen);
     void setVsync(bool vsync);
+    void setMaximization(bool maximized);
+    void setAntialiasing(bool antialiased);
+
+    void getScreenshot() const;
 
     std::string version;
     std::string profile;
@@ -34,6 +38,9 @@ public:
 
     bool isVSynced() const;
     bool isFullscreen() const;
+    bool isMaximized() const;
+    bool isAntialiased() const;
+
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     void init();
@@ -61,6 +68,8 @@ private:
     bool running      = false;
     bool fullscreen   = false;
     bool vsync        = false;
+    bool maximized    = false;
+    bool antialiased  = false;
     
     float winScale     = 0.5;
 

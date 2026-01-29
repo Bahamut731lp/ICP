@@ -7,6 +7,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include "src/lib/render.hpp"
+#include "src/lib/gui.hpp"
 #include "src/lib/logger.hpp"
 #include "src/lib/fps_meter.hpp"
 #include "src/lib/camera.hpp"
@@ -36,7 +37,6 @@ int main()
     }
 
     cv::Mat frame;
-    fps_meter FPS(1.0s);
 
     renderer.init();
     renderer.setScale(1);
@@ -47,40 +47,9 @@ int main()
         
         if (glfwWindowShouldClose(renderer.window))
             break;
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // 1. Create a simple window
-        ImGui::Begin("OpenGL Control Panel"); 
-        ImGui::Text("System Info:");
-        ImGui::Text("GPU: %s", renderer.renderer.c_str()); 
-        ImGui::Text("Ver: %s", renderer.version.c_str());
-        ImGui::Separator();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
-            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-        if (ImGui::Button("Close App")) {
-            glfwSetWindowShouldClose(renderer.window, true);
-        }
-        
-        ImGui::End();
         
         World::render(&renderer, delta);
-        ImGui::Render();
-        
-        if (FPS.is_updated())
-        {
-            Logger::info("FPS: " + std::to_string(FPS.get()));
-        }
-        /*
-            =======================
-            FRAME PROCESSING END
-            =======================
-        */
-
-        FPS.update();
+        GUI::render(&renderer);
     
         int display_w, display_h;
         glfwGetFramebufferSize(renderer.window, &display_w, &display_h);
@@ -90,7 +59,6 @@ int main()
 
         // Draw ImGui over your scene
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         glfwSwapBuffers(renderer.window);
     }
 

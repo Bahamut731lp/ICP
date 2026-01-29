@@ -33,6 +33,20 @@ void window_size_callback(GLFWwindow *window, int width, int height)
     glfwSetWindowSize(window, newWidth, newHeight);
 }
 
+void window_maximize_callback(GLFWwindow* window, int maximized) {
+    if (maximized) {
+        Logger::info("Window was maximized");
+    } else {
+        Logger::info("Window was restored");
+    }
+    
+    GlRender* instance = static_cast<GlRender*>(glfwGetWindowUserPointer(window));
+    if (instance) {
+        Logger::info("Setting stuff in instance");
+        instance->setMaximization((bool)maximized);
+    }
+}
+
 GlRender::GlRender()
 {
 }
@@ -75,6 +89,7 @@ void GlRender::setGlfwParameters() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
     glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -96,9 +111,9 @@ void GlRender::setGlfwWindowInstance() {
 }
 
 void GlRender::setGlfwCallbacks() {
-    glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
+    glfwSetWindowMaximizeCallback(window, window_maximize_callback);
     glfwSetWindowUserPointer(window, this);
 }
 
@@ -231,6 +246,7 @@ void GlRender ::draw(const cv::Mat &frame)
 
 void GlRender::setFullscreen(bool fullscreen)
 {
+    Logger::info("Fullscreen:\t" + std::string(fullscreen ? "enabled" : "disabled"));
     this->fullscreen = fullscreen;
     if (fullscreen)
     {
@@ -250,6 +266,9 @@ void GlRender::setFullscreen(bool fullscreen)
 
 void GlRender::setVsync(bool vsync)
 {
+    Logger::info("V-Sync:\t" + std::string(vsync ? "enabled" : "disabled"));
+    glfwMakeContextCurrent(window);
+
     this->vsync = vsync;
 
     if (vsync)
@@ -261,6 +280,30 @@ void GlRender::setVsync(bool vsync)
     glfwSwapInterval(0);
 }
 
+void GlRender::setMaximization(bool maximized)
+{
+    Logger::info("Maximization:\t" + std::string(maximized ? "enabled" : "disabled"));
+    this->maximized = maximized;
+
+    if (maximized) {
+        glfwMaximizeWindow(window);
+    } else {
+        glfwRestoreWindow(window);
+    }
+}
+
+void GlRender::setAntialiasing(bool antialised)
+{
+    Logger::info("Antialising:\t" + std::string(antialised ? "enabled" : "disabled"));
+    this->antialiased = antialiased;
+
+    if (antialiased) {
+        glEnable(GL_MULTISAMPLE);
+    } else {
+        glDisable(GL_MULTISAMPLE);
+    }
+}
+
 bool GlRender::isVSynced() const
 {
     return vsync;
@@ -269,6 +312,33 @@ bool GlRender::isVSynced() const
 bool GlRender::isFullscreen() const
 {
     return fullscreen;
+}
+
+bool GlRender::isMaximized() const
+{
+    return maximized;
+}
+
+bool GlRender::isAntialiased() const
+{
+    return antialiased;
+}
+
+void GlRender::getScreenshot() const
+{
+    cv::Mat pixels(winHeight, winWidth, CV_8UC3);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, winWidth, winHeight, GL_BGR, GL_UNSIGNED_BYTE, pixels.data);
+
+    cv::Mat flipped;
+    cv::flip(pixels, flipped, 0);
+
+    // 5. Uložíme pomocí OpenCV
+    if (cv::imwrite("screenshot.png", flipped)) {
+        Logger::info("Screenshot saved to: screenshot.png");
+    } else {
+        Logger::error("Failed to save screenshot!");
+    }
 }
 
 void GlRender::key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -299,9 +369,7 @@ void GlRender::handle_key_press(int key, int action)
             setFullscreen(fullscreen);
             break;
         }
-        case GLFW_KEY_V: {
-            Logger::info("V-Sync:\t" + std::string(vsync ? "enabled" : "disabled"));
-            
+        case GLFW_KEY_V: {            
             vsync = !vsync;
             setVsync(vsync);
             break;
