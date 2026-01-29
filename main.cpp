@@ -16,7 +16,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
-float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+float clear_color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 float delta = 0.0f;
 
 int main()
@@ -37,28 +37,31 @@ int main()
     }
 
     cv::Mat frame;
-
     renderer.init();
     renderer.setScale(1);
 
+    World::init();
+    glfwSetInputMode(renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
     while (1)
     {
         glfwPollEvents();
+
+        int fbWidth, fbHeight;
+        glfwGetFramebufferSize(renderer.window, &fbWidth, &fbHeight);        
+        glViewport(0, 0, fbWidth, fbHeight);
+        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         if (glfwWindowShouldClose(renderer.window))
             break;
         
         World::render(&renderer, delta);
         GUI::render(&renderer);
-    
-        int display_w, display_h;
-        glfwGetFramebufferSize(renderer.window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // Draw ImGui over your scene
+        
+        ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // Draw ImGui over your scene
         glfwSwapBuffers(renderer.window);
     }
 

@@ -6,6 +6,10 @@
 #include <thread>
 
 Camera* GlRender::cam = nullptr;
+float GlRender::lastX = 0.0f;
+float GlRender::lastY = 0.0f;
+bool GlRender::isMouseMoved = false;
+
 double window_aspect_ratio = 1.0;
 
 std::string glStringToString(GLenum name) {
@@ -29,8 +33,6 @@ void window_size_callback(GLFWwindow *window, int width, int height)
 {
     int newWidth = width;
     int newHeight = newWidth / window_aspect_ratio;
-
-    glfwSetWindowSize(window, newWidth, newHeight);
 }
 
 void window_maximize_callback(GLFWwindow* window, int maximized) {
@@ -64,11 +66,19 @@ void GlRender::setScale(float s)
     winScale = s;
 }
 
+int GlRender::getWidth() const
+{
+    return winWidth; 
+}
+
+int GlRender::getHeight() const
+{
+    return winHeight; 
+}
+
 void GlRender::setSize(int width, int height) {
     winWidth = width;
     winHeight = height;
-    frameWidth = width;
-    frameHeight = height;
     glfwSetWindowSize(this->window, width, height);
 }
 
@@ -81,7 +91,7 @@ void GlRender::setImguiParameters() {
     ImGui_ImplOpenGL3_Init("#version 460");
 }
 
-void GlRender::setGlfwParameters() {
+void GlRender::setWindowHints() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -90,11 +100,15 @@ void GlRender::setGlfwParameters() {
     glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
     glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
+}
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, winWidth, winHeight, 0.0, 0.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
+void GlRender::setGlfwFeatures() {
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GlRender::setGlfwWindowInstance() {
@@ -115,6 +129,7 @@ void GlRender::setGlfwCallbacks() {
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetWindowMaximizeCallback(window, window_maximize_callback);
     glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, GlRender::mouse_callback);
 }
 
 void GlRender::init()
@@ -139,7 +154,7 @@ void GlRender::init()
         return;
     }
 
-    setGlfwParameters();
+    setWindowHints();
     setGlfwWindowInstance();
 
     if (glewInit() != GLEW_OK)
@@ -149,12 +164,12 @@ void GlRender::init()
         exit(1);
     }
     
-    setImguiParameters();
+    setGlfwFeatures();
     setGlfwCallbacks();
+    setImguiParameters();
 
-    int frameWidth, frameHeight;
-    glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
-    glViewport(0, 0, frameWidth, frameHeight);
+    glfwGetFramebufferSize(window, &winWidth, &winHeight);
+    glViewport(0, 0, winWidth, winHeight);
 
     initialized = true;
     version = glStringToString(GL_VERSION);
@@ -209,39 +224,6 @@ GLuint GlRender ::getTextureID(const cv::Mat &mat)
     // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mat.cols, mat.rows, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, mat.ptr());
 
     return textureID;
-}
-
-void GlRender ::draw(const cv::Mat &frame)
-{
-    frameWidth = frame.cols;
-    frameHeight = frame.rows;
-    winWidth = winScale * frame.cols;
-    winHeight = winScale * frame.rows;
-    window_aspect_ratio = frameWidth / (double)frameHeight;
-
-    GLuint tex = getTextureID(frame);
-
-    glClearColor(0.1, 0.1, 0.1, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode(GL_MODELVIEW);
-
-    glEnable(GL_TEXTURE_2D);
-
-    glBegin(GL_QUADS);
-    glTexCoord2i(0, 0);
-    glVertex2i(0, 0);
-    glTexCoord2i(0, 1);
-    glVertex2i(0, winHeight);
-    glTexCoord2i(1, 1);
-    glVertex2i(winWidth, winHeight);
-    glTexCoord2i(1, 0);
-    glVertex2i(winWidth, 0);
-
-    glEnd();
-
-    glDeleteTextures(1, &tex);
-    glDisable(GL_TEXTURE_2D);
 }
 
 void GlRender::setFullscreen(bool fullscreen)
@@ -347,6 +329,34 @@ void GlRender::key_callback(GLFWwindow *window, int key, int scancode, int actio
     if (instance) {
         instance->onKeyEvent(key, action);
     }
+}
+
+void GlRender::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    // Check if any camera was assigned to the window,
+    // since default value is null pointer, which could lead
+    // to crashes. We do not want that.
+    if (GlRender::cam == nullptr) {
+        return;
+    }
+
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (GlRender::isMouseMoved)
+    {
+        GlRender::lastX = xpos;
+        GlRender::lastY = ypos;
+        GlRender::isMouseMoved = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    GlRender::cam->onMouseEvent(xoffset, yoffset, GL_TRUE);
 }
 
 void GlRender::onKeyEvent(int key, int action)

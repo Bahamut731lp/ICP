@@ -40,7 +40,7 @@ public:
 	Camera();
 
 	glm::mat4 getViewMatrix();
-	glm::mat4 getProjectionMatrix();
+	glm::mat4 getProjectionMatrix(float aspectRatio);
 
 	void onKeyboardEvent(GLFWwindow* window, GLfloat deltaTime);
 	void onMouseEvent(GLfloat xoffset, GLfloat yoffset, GLboolean constraintPitch);

@@ -39,11 +39,15 @@ Model::Model()
 
 void Model::render(Camera& camera, Shader& shader)
 {
+	int width, height;
+    glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
+    float aspect = (float)width / (float)height;
+
 	shader.activate();
 	//transform = glm::mat4(1.0f);
 	shader.setUniform("transform", transform);
 	shader.setUniform("view", camera.getViewMatrix());
-	shader.setUniform("projection", camera.getProjectionMatrix());
+	shader.setUniform("projection", camera.getProjectionMatrix(aspect));
 
 	for (Mesh mesh : meshes)
 	{

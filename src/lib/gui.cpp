@@ -51,5 +51,4 @@ void GUI::render(GlRender* instance)
     }
     
     ImGui::End();
-    ImGui::Render();
 }

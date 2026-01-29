@@ -29,6 +29,8 @@ public:
     void setAntialiasing(bool antialiased);
 
     void getScreenshot() const;
+    int getWidth() const;
+    int getHeight() const;
 
     std::string version;
     std::string profile;
@@ -41,20 +43,23 @@ public:
     bool isMaximized() const;
     bool isAntialiased() const;
 
+    static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     void init();
-    void draw(const cv::Mat& frame);
+
+    // Variables for camera movement
+    static Camera *cam; 
+    static bool isMouseMoved;
+    static float lastX;
+    static float lastY;
     
     GLuint getTextureID(const cv::Mat &mat);
     GLFWwindow *window = nullptr;
-    static Camera *cam; 
 private:
     std::string winname = "ICP";
     std::array<int,2>  winPos = {0,0};
     int  fps       = 60;
-    int  frameWidth   = 1280;
-    int  frameHeight  = 720;
     int  winWidth     = 1280;
     int  winHeight    = 720;
 
@@ -78,7 +83,8 @@ private:
     void onKeyEvent(int key, int action);
 
     void setImguiParameters();
-    void setGlfwParameters();
+    void setWindowHints();
+    void setGlfwFeatures();
     void setGlfwWindowInstance();
     void setGlfwCallbacks();
 };
