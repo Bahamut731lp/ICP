@@ -81,9 +81,6 @@ Scene World::render(GlRender* GlRender, float delta)
 	glass->render(*camera, *material);
 	coin->render(*camera, *material);
 
-	// Process events
-	GlRender::cam->onKeyboardEvent(glfwGetCurrentContext(), delta);
-
 	return Scene::SceneWorld;
 }
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include "camera.hpp"
+#include "logger.hpp"
 #include "glm/common.hpp"
 #include "glm/ext.hpp"
 

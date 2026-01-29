@@ -18,6 +18,7 @@
 
 float clear_color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 float delta = 0.0f;
+float lastFrame = 0.0f;
 
 int main()
 {
@@ -47,9 +48,14 @@ int main()
     {
         glfwPollEvents();
 
-        int fbWidth, fbHeight;
-        glfwGetFramebufferSize(renderer.window, &fbWidth, &fbHeight);        
-        glViewport(0, 0, fbWidth, fbHeight);
+        float currentFrame = glfwGetTime();
+        delta = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        int width, height;
+        glfwGetFramebufferSize(renderer.window, &width, &height);        
+        glViewport(0, 0, width, height);
+
         glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
@@ -57,6 +63,8 @@ int main()
             break;
         
         World::render(&renderer, delta);
+	    GlRender::cam->onKeyboardEvent(renderer.window, delta);
+        
         GUI::render(&renderer);
         
         ImGui::Render();
