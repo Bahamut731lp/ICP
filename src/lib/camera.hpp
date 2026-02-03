@@ -1,4 +1,5 @@
 #pragma once
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
@@ -8,6 +9,11 @@ enum Camera_Movement {
 	BACKWARD,
 	LEFT,
 	RIGHT
+};
+
+enum Camera_Mode {
+	FIRST_PERSON,
+	STATIC
 };
 
 class Camera
@@ -32,7 +38,7 @@ public:
 	GLfloat MouseSensitivity;
 	GLfloat Zoom;
 
-	// TODO: Tohle se pak mus� p�esunout jinam
+	Camera_Mode mode;
 	GLfloat SprintFactor;
 
 	// Constructor

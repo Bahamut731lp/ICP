@@ -1,13 +1,12 @@
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
+#include "shader.hpp"
+#include "logger.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <filesystem>
 #include <vector>
 #include <stdexcept>
 
-#include "logger.hpp"
-#include "shader.hpp"
 
 Shader::Shader(const std::filesystem::path& VS_file, const std::filesystem::path& FS_file)
 {

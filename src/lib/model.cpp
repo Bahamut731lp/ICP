@@ -1,9 +1,8 @@
 #include <string>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 
+#include "render.hpp"
 #include "model.hpp"
 #include "logger.hpp"
 #include "obj_loader.hpp"
@@ -38,7 +37,6 @@ Model::Model()
 {
 }
 
-
 AABB Model::calculateAABB()
 {
     glm::vec3 minBound(std::numeric_limits<float>::max());
@@ -64,45 +62,17 @@ AABB Model::calculateAABB()
     return AABB{ minBound, maxBound };
 }
 
-void Model::render(Camera& camera, Shader& shader)
+void Model::submit(Shader& shader)
 {
-	int width, height;
-    glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
-    float aspect = (float)width / (float)height;
+   float dist = glm::distance(Renderer::camera->Position, glm::vec3(transform[3]));
 
-	shader.activate();
-	//transform = glm::mat4(1.0f);
-	shader.setUniform("transform", transform);
-	shader.setUniform("view", camera.getViewMatrix());
-	shader.setUniform("projection", camera.getProjectionMatrix(aspect));
-
-	for (Mesh mesh : meshes)
-	{
-		// Set color information
-		shader.setUniform("material.diffuse", mesh.material.diffuse);
-		shader.setUniform("material.specular", mesh.material.specular);
-		shader.setUniform("material.shininess", mesh.material.shininess);
-		shader.setUniform("material.transparency", mesh.material.transparency);
-
-		// Texture, if applicable.
-		if (mesh.material.texture.id != -1) {
-			// We have to send Texture Unit to the uniform
-			shader.setUniform("material.texture.textureUnit", 0);
-			shader.setUniform("material.texture.isTextured", 1);
-			shader.setUniform("material.texture.scale", mesh.material.texture.scale);
-            
-			//and then activate the texture with it's ID on that texture unit.
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, mesh.material.texture.id);
-		}
-		else {
-			shader.setUniform("material.texture.isTextured", 0);
-		}
-
-		mesh.draw(shader);
-
-		// Cleanup
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
+    for (Mesh& mesh : meshes) {
+        RenderCommand cmd = { &mesh, transform, dist };
+        
+        if (mesh.material.transparency < 1.0f) {
+            Renderer::queue.transparent.push_back(cmd);
+        } else {
+            Renderer::queue.opaque.push_back(cmd);
+        }
+    }
 }

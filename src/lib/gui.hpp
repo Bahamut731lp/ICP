@@ -7,5 +7,5 @@
 
 class GUI {
 public:	
-	static void render(GlRender* instance);
+	static void render();
 };

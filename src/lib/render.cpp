@@ -5,27 +5,55 @@
 #include <imgui_impl_opengl3.h>
 #include <thread>
 
-Camera* GlRender::cam = nullptr;
-float GlRender::lastX = 0.0f;
-float GlRender::lastY = 0.0f;
-bool GlRender::isMouseMoved = false;
+Camera *Renderer::camera = nullptr;
+GLFWwindow *Renderer::window = nullptr;
+
+bool Renderer::antialiased = false;
+bool Renderer::maximized = false;
+bool Renderer::vsync = false;
+bool Renderer::fullscreen = false;
+bool Renderer::isMouseMoved = false;
+
+int Renderer::lastWindowX = 0;
+int Renderer::lastWindowY = 0;
+int Renderer::lastWindowWidth = 0;
+int Renderer::lastWindowHeight = 0;
+int Renderer::winWidth = 1280;
+int Renderer::winHeight = 720;
+
+std::string Renderer::version = "";
+std::string Renderer::profile = "";
+std::string Renderer::renderer = "";
+std::string Renderer::vendor = "";
+std::string Renderer::shadingLanguage = "";
+
+float Renderer::winScale = 0.5;
+float Renderer::lastX = 0.0f;
+float Renderer::lastY = 0.0f;
+
+RenderQueue Renderer::queue;
+
+std::array<int, 2> Renderer::position = {0, 0};
+std::string Renderer::name = "ICP";
 
 double window_aspect_ratio = 1.0;
 
-std::string glStringToString(GLenum name) {
-    const GLubyte* str = glGetString(name);
-    return str ? std::string(reinterpret_cast<const char*>(str)) : "Unknown";
+std::string glStringToString(GLenum name)
+{
+    const GLubyte *str = glGetString(name);
+    return str ? std::string(reinterpret_cast<const char *>(str)) : "Unknown";
 }
 
-std::string getProfile() {
+std::string getProfile()
+{
     GLint profileMask = 0;
     glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
 
-    if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) 
+    if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT)
         return "Core Profile";
-    if (profileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) 
+    if (profileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT)
         return "Compatibility Profile";
-    
+
     return "Unknown Profile";
 }
 
@@ -35,25 +63,43 @@ void window_size_callback(GLFWwindow *window, int width, int height)
     int newHeight = newWidth / window_aspect_ratio;
 }
 
-void window_maximize_callback(GLFWwindow* window, int maximized) {
-    if (maximized) {
+void window_maximize_callback(GLFWwindow *window, int maximized)
+{
+    if (maximized)
+    {
         Logger::info("Window was maximized");
-    } else {
+    }
+    else
+    {
         Logger::info("Window was restored");
     }
-    
-    GlRender* instance = static_cast<GlRender*>(glfwGetWindowUserPointer(window));
-    if (instance) {
+
+    Renderer *instance = static_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    if (instance)
+    {
         Logger::info("Setting stuff in instance");
         instance->setMaximization((bool)maximized);
     }
 }
 
-GlRender::GlRender()
+void Renderer::setCursor(CursorMode cursor)
+{
+    switch (cursor)
+    {
+    case FREE:
+        glfwSetInputMode(Renderer::window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        break;
+    case LOCKED:
+        glfwSetInputMode(Renderer::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        break;
+    }
+}
+
+Renderer::Renderer()
 {
 }
 
-GlRender::~GlRender()
+Renderer::~Renderer()
 {
     if (window)
     {
@@ -61,37 +107,40 @@ GlRender::~GlRender()
     }
 }
 
-void GlRender::setScale(float s)
+void Renderer::setScale(float s)
 {
     winScale = s;
 }
 
-int GlRender::getWidth() const
+int Renderer::getWidth()
 {
-    return winWidth; 
+    return Renderer::winWidth;
 }
 
-int GlRender::getHeight() const
+int Renderer::getHeight()
 {
-    return winHeight; 
+    return winHeight;
 }
 
-void GlRender::setSize(int width, int height) {
+void Renderer::setSize(int width, int height)
+{
     winWidth = width;
     winHeight = height;
-    glfwSetWindowSize(this->window, width, height);
+    glfwSetWindowSize(window, width, height);
 }
 
-void GlRender::setImguiParameters() {
+void Renderer::setImguiParameters()
+{
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
 
-    ImGui_ImplGlfw_InitForOpenGL(window, true); 
-    ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
 }
 
-void GlRender::setWindowHints() {
+void Renderer::setWindowHints()
+{
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -104,7 +153,8 @@ void GlRender::setWindowHints() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 2. Required for macOS
 }
 
-void GlRender::setGlfwFeatures() {
+void Renderer::setGlfwFeatures()
+{
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -113,8 +163,9 @@ void GlRender::setGlfwFeatures() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void GlRender::setGlfwWindowInstance() {
-    window = glfwCreateWindow(winWidth, winHeight, winname.c_str(), nullptr, nullptr);
+void Renderer::setGlfwWindowInstance()
+{
+    window = glfwCreateWindow(winWidth, winHeight, name.c_str(), nullptr, nullptr);
     if (!window)
     {
         Logger::error("Failed to create GL window.");
@@ -122,27 +173,20 @@ void GlRender::setGlfwWindowInstance() {
         exit(1);
     }
 
-    glfwSetWindowPos(window, winPos[0], winPos[1]);
+    glfwSetWindowPos(window, position[0], position[1]);
     glfwMakeContextCurrent(window);
 }
 
-void GlRender::setGlfwCallbacks() {
-    glfwSetKeyCallback(window, key_callback);
+void Renderer::setGlfwCallbacks()
+{
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetWindowMaximizeCallback(window, window_maximize_callback);
-    glfwSetWindowUserPointer(window, this);
-    glfwSetCursorPosCallback(window, GlRender::mouse_callback);
+    glfwSetCursorPosCallback(window, Renderer::mouse_callback);
 }
 
-void GlRender::init()
+void Renderer::init()
 {
-    if (window)
-    {
-        glfwDestroyWindow(window);
-    }
-
-    initialized = false;
-
     if (!glfwInit())
     {
         Logger::error("Failed to initialize glfw.");
@@ -165,7 +209,7 @@ void GlRender::init()
         glfwTerminate();
         exit(1);
     }
-    
+
     setGlfwFeatures();
     setGlfwCallbacks();
     setImguiParameters();
@@ -173,7 +217,6 @@ void GlRender::init()
     glfwGetFramebufferSize(window, &winWidth, &winHeight);
     glViewport(0, 0, winWidth, winHeight);
 
-    initialized = true;
     version = glStringToString(GL_VERSION);
     profile = getProfile();
     renderer = glStringToString(GL_RENDERER);
@@ -185,53 +228,49 @@ void GlRender::init()
     Logger::info("Render: " + renderer);
     Logger::info("Vendor: " + vendor);
     Logger::info("Shading Language: " + shadingLanguage);
+
+    Renderer::setCursor(LOCKED);
 }
 
-GLuint GlRender ::getTextureID(const cv::Mat &mat)
+GLuint Renderer ::getTextureID(const cv::Mat &mat)
 {
     GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
 
-    // Set texture interpolation methods for minification and magnification
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     GLenum inputFormat;
+    GLenum internalFormat = GL_RGBA8; // Standard internal format
+
     switch (mat.channels())
     {
     case 1:
-        inputFormat = GL_LUMINANCE;
+        inputFormat = GL_RED; // DSA preferred over GL_LUMINANCE
+        internalFormat = GL_R8;
         break;
     case 3:
         inputFormat = GL_BGR;
+        internalFormat = GL_RGB8;
         break;
     case 4:
         inputFormat = GL_BGRA;
+        internalFormat = GL_RGBA8;
         break;
     }
 
-    glTexImage2D(GL_TEXTURE_2D,    // Type of texture
-                 0,                // Pyramid level (for mip-mapping) - 0 is the top level
-                 GL_RGB,           // Internal colour format to convert to
-                 mat.cols,         // Image width  i.e. 640 for Kinect in standard mode
-                 mat.rows,         // Image height i.e. 480 for Kinect in standard mode
-                 0,                // Border width in pixels (can either be 1 or 0)
-                 inputFormat,      // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-                 GL_UNSIGNED_BYTE, // Image data type
-                 mat.ptr());       // The actual image data itself
-
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mat.cols, mat.rows, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, mat.ptr());
+    glTextureStorage2D(textureID, 1, internalFormat, mat.cols, mat.rows);
+    glTextureSubImage2D(textureID, 0, 0, 0, mat.cols, mat.rows, inputFormat, GL_UNSIGNED_BYTE, mat.ptr());
 
     return textureID;
 }
 
-void GlRender::setFullscreen(bool fullscreen)
+void Renderer::setFullscreen(bool fullscreen)
 {
     Logger::info("Fullscreen:\t" + std::string(fullscreen ? "enabled" : "disabled"));
-    this->fullscreen = fullscreen;
+    Renderer::fullscreen = fullscreen;
     if (fullscreen)
     {
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -248,12 +287,12 @@ void GlRender::setFullscreen(bool fullscreen)
     }
 }
 
-void GlRender::setVsync(bool vsync)
+void Renderer::setVsync(bool vsync)
 {
     Logger::info("V-Sync:\t" + std::string(vsync ? "enabled" : "disabled"));
     glfwMakeContextCurrent(window);
 
-    this->vsync = vsync;
+    Renderer::vsync = vsync;
 
     if (vsync)
     {
@@ -264,51 +303,57 @@ void GlRender::setVsync(bool vsync)
     glfwSwapInterval(0);
 }
 
-void GlRender::setMaximization(bool maximized)
+void Renderer::setMaximization(bool maximized)
 {
     Logger::info("Maximization:\t" + std::string(maximized ? "enabled" : "disabled"));
-    this->maximized = maximized;
+    Renderer::maximized = maximized;
 
-    if (maximized) {
+    if (maximized)
+    {
         glfwMaximizeWindow(window);
-    } else {
+    }
+    else
+    {
         glfwRestoreWindow(window);
     }
 }
 
-void GlRender::setAntialiasing(bool antialised)
+void Renderer::setAntialiasing(bool antialised)
 {
     Logger::info("Antialising:\t" + std::string(antialised ? "enabled" : "disabled"));
-    this->antialiased = antialiased;
+    Renderer::antialiased = antialiased;
 
-    if (antialiased) {
+    if (antialiased)
+    {
         glEnable(GL_MULTISAMPLE);
-    } else {
+    }
+    else
+    {
         glDisable(GL_MULTISAMPLE);
     }
 }
 
-bool GlRender::isVSynced() const
+bool Renderer::isVSynced()
 {
     return vsync;
 }
 
-bool GlRender::isFullscreen() const
+bool Renderer::isFullscreen()
 {
     return fullscreen;
 }
 
-bool GlRender::isMaximized() const
+bool Renderer::isMaximized()
 {
     return maximized;
 }
 
-bool GlRender::isAntialiased() const
+bool Renderer::isAntialiased()
 {
     return antialiased;
 }
 
-void GlRender::getScreenshot() const
+void Renderer::getScreenshot()
 {
     cv::Mat pixels(winHeight, winWidth, CV_8UC3);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -318,38 +363,45 @@ void GlRender::getScreenshot() const
     cv::flip(pixels, flipped, 0);
 
     // 5. Uložíme pomocí OpenCV
-    if (cv::imwrite("screenshot.png", flipped)) {
+    if (cv::imwrite("screenshot.png", flipped))
+    {
         Logger::info("Screenshot saved to: screenshot.png");
-    } else {
+    }
+    else
+    {
         Logger::error("Failed to save screenshot!");
     }
 }
 
-void GlRender::key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+void Renderer::mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    GlRender* instance = static_cast<GlRender*>(glfwGetWindowUserPointer(window));
-    if (instance) {
-        instance->onKeyEvent(key, action);
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        // Handle Left Click
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        Logger::info("Left Click at: " + std::to_string(xpos) + ", " + std::to_string(ypos));
     }
 }
 
-void GlRender::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void Renderer::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
     // Check if any camera was assigned to the window,
     // since default value is null pointer, which could lead
     // to crashes. We do not want that.
-    if (GlRender::cam == nullptr) {
+    if (Renderer::camera == nullptr)
+    {
         return;
     }
 
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    if (GlRender::isMouseMoved)
+    if (Renderer::isMouseMoved)
     {
-        GlRender::lastX = xpos;
-        GlRender::lastY = ypos;
-        GlRender::isMouseMoved = false;
+        Renderer::lastX = xpos;
+        Renderer::lastY = ypos;
+        Renderer::isMouseMoved = false;
     }
 
     float xoffset = xpos - lastX;
@@ -358,39 +410,75 @@ void GlRender::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    GlRender::cam->onMouseEvent(xoffset, yoffset, GL_TRUE);
+    Renderer::camera->onMouseEvent(xoffset, yoffset, GL_TRUE);
 }
 
-void GlRender::onKeyEvent(int key, int action)
+void Renderer::draw(const RenderCommand &cmd, Shader &shader)
 {
-    switch (action) {
-        case GLFW_PRESS:
-            this->handle_key_press(key, action);
-        default:
-            break;
+    shader.activate();
+
+    float aspect = (float)Renderer::winWidth / (float)Renderer::winHeight;
+    shader.setUniform("transform", cmd.transform);
+    shader.setUniform("view", (*Renderer::camera).getViewMatrix());
+    shader.setUniform("projection", (*Renderer::camera).getProjectionMatrix(aspect));
+
+    // Set material uniforms from the mesh
+    shader.setUniform("material.diffuse", cmd.mesh->material.diffuse);
+    shader.setUniform("material.specular", cmd.mesh->material.specular);
+    shader.setUniform("material.shininess", cmd.mesh->material.shininess);
+    shader.setUniform("material.transparency", cmd.mesh->material.transparency);
+
+    // Texture Logic
+    if (cmd.mesh->material.texture.id != -1)
+    {
+        shader.setUniform("material.texture.textureUnit", 0);
+        shader.setUniform("material.texture.isTextured", 1);
+        shader.setUniform("material.texture.scale", cmd.mesh->material.texture.scale);
+
+        glBindTextureUnit(0, cmd.mesh->material.texture.id);
     }
+    else
+    {
+        shader.setUniform("material.texture.isTextured", 0);
+        glBindTextureUnit(0, 0);
+    }
+
+    cmd.mesh->draw(shader);
 }
 
-void GlRender::handle_key_press(int key, int action)
+void Renderer::execute(Shader &shader)
 {
-    switch (key) {
-        case GLFW_KEY_F: {
-            Logger::info("Fullscreen:\t" + std::string(fullscreen ? "enabled" : "disabled"));
-            
-            fullscreen = !fullscreen;
-            setFullscreen(fullscreen);
-            break;
-        }
-        case GLFW_KEY_V: {            
-            vsync = !vsync;
-            setVsync(vsync);
-            break;
-        }
-        case GLFW_KEY_ESCAPE: {
-            Logger::info("Closing window through key shortcut.");
-            
-            glfwTerminate();
-            break;
-        }
+    std::sort(queue.opaque.begin(), queue.opaque.end(), [](const RenderCommand &a, const RenderCommand &b)
+              { return a.distance < b.distance; });
+
+    std::sort(queue.transparent.begin(), queue.transparent.end(), [](const RenderCommand &a, const RenderCommand &b)
+              { return a.distance > b.distance; });
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    for (const auto &cmd : queue.opaque)
+    {
+        Renderer::draw(cmd, shader);
     }
+
+    glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
+
+    for (const auto &cmd : queue.transparent)
+    {
+        glEnable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
+        Renderer::draw(cmd, shader);
+
+        glCullFace(GL_BACK);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        Renderer::draw(cmd, shader);
+    }
+
+    glDepthMask(GL_TRUE);
+    queue.clear();
 }

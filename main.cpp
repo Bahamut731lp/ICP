@@ -15,6 +15,12 @@
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <thread>
+
+std::thread audio_thread;
+std::thread event_thread;
+std::thread gui_thread;
+std::thread SoundThread;
 
 float clear_color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 float delta = 0.0f;
@@ -23,54 +29,38 @@ float lastFrame = 0.0f;
 int main()
 {
     Logger::info("App has started");
-    GlRender renderer;
-
     cv::VideoCapture capture = cv::VideoCapture(0, cv::CAP_ANY);
 
-    if (!capture.isOpened())
-    {
-        Logger::error("Camera cannot be open.");
-        return 1;
-    }
-    else
-    {
-        Logger::info("Source: Width: " + std::to_string(capture.get(cv::CAP_PROP_FRAME_WIDTH)) + "; Height: " + std::to_string(capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
-    }
-
-    cv::Mat frame;
-    renderer.init();
-    renderer.setScale(1);
-
+    Renderer::init();
     World::init();
-    glfwSetInputMode(renderer.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     while (1)
     {
+        // 1. Events
         glfwPollEvents();
+        Renderer::camera->onKeyboardEvent(Renderer::window, delta);
+
+        // 2. Clear the frame
+        RenderQueue frameQueue;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float currentFrame = glfwGetTime();
         delta = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         int width, height;
-        glfwGetFramebufferSize(renderer.window, &width, &height);        
+        glfwGetFramebufferSize(Renderer::window, &width, &height);        
         glViewport(0, 0, width, height);
 
-        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        if (glfwWindowShouldClose(renderer.window))
+        if (glfwWindowShouldClose(Renderer::window))
             break;
         
-        World::render(&renderer, delta);
-	    GlRender::cam->onKeyboardEvent(renderer.window, delta);
-        
-        GUI::render(&renderer);
-        
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        World::calculate(delta);
+        Renderer::execute(*World::material);
+        GUI::render();
+
         // Draw ImGui over your scene
-        glfwSwapBuffers(renderer.window);
+        glfwSwapBuffers(Renderer::window);
     }
 
     Logger::info("App has ended");
@@ -78,7 +68,7 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(renderer.window);
+    glfwDestroyWindow(Renderer::window);
     glfwTerminate();
     return 0;
 }

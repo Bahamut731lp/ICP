@@ -26,9 +26,7 @@ static std::vector<AABB> collisionBoxes;
 void World::init()
 {
 	player = new Player(glm::vec3(0.0f, 10.0f, 10.0f));
-
-	World::camera = &player->camera;
-	GlRender::cam = World::camera;
+	Renderer::camera = &player->camera;
 
 	audio_manager.load_BGM("minecraft", "resources/audio/minecraft_bg.mp3", 1.0f);
 	audio_manager.play_BGM("minecraft", 0.1f);
@@ -88,11 +86,9 @@ void World::init()
 	lights->add(simpleLight2);
 	lights->add(sunlight);
 	lights->add(*material);
-
-
 }
 
-Scene World::render(GlRender* GlRender, float delta)
+Scene World::calculate(float delta)
 {
     const int ONE_DAY = 16;
     const auto gametime = glfwGetTime();
@@ -117,9 +113,8 @@ Scene World::render(GlRender* GlRender, float delta)
 
     collisionBoxes.push_back(glass->calculateAABB());
 
-
     if (player) {
-        player->update(delta, GlRender->window, audio_manager, collisionBoxes);
+        player->update(delta, Renderer::window, audio_manager, collisionBoxes);
     }
 
 
@@ -137,26 +132,22 @@ Scene World::render(GlRender* GlRender, float delta)
 
     lights->calc();
 
-    terrain->render(*camera, *material);
-    glass->render(*camera, *material);
-
-    for (auto* crate : crates) {
-        crate->render(*camera, *material);
-    }
-
+	terrain->submit(*material);
+	glass->submit(*material);
+    
     if (!coin_collected) {
-        coin->render(*camera, *material);
+		coin->submit(*material);
     }
 
     return Scene::SceneWorld;
 }
 
-Scene World::load(GlRender *GlRender, std::shared_ptr<int> progress)
+Scene World::load(Renderer* Renderer, std::shared_ptr<int> progress)
 {
 	if (*progress == 1)
 	{
 		World::init();
-		glfwSetInputMode(GlRender->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetInputMode(Renderer->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		return Scene::SceneWorld;
 	}
 	*progress = 1;
