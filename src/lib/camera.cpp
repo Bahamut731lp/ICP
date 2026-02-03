@@ -1,6 +1,7 @@
 #include <iostream>
 #include "camera.hpp"
 #include "logger.hpp"
+#include "render.hpp"
 #include "glm/common.hpp"
 #include "glm/ext.hpp"
 
@@ -40,32 +41,30 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) {
 
 void Camera::onKeyboardEvent(GLFWwindow* window, GLfloat deltaTime)
 {
-	glm::vec3 direction{ 0 };
+    float cameraSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? SprintFactor : 1) * MovementSpeed * deltaTime;
 
-	float cameraSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? SprintFactor : 1) * MovementSpeed * deltaTime;
+    glm::vec3 flatFront = glm::normalize(glm::vec3(this->Front.x, 0.0f, this->Front.z));
+    glm::vec3 flatRight = glm::normalize(glm::vec3(this->Right.x, 0.0f, this->Right.z));
+	
 
 	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-		this->mode = Camera_Mode::STATIC;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		Renderer::setCursor(FREE);
 	}
-
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-		this->mode = Camera_Mode::FIRST_PERSON;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		Renderer::setCursor(LOCKED);
 	}
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		this->Position += cameraSpeed * this->Front;
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		this->Position -= cameraSpeed * this->Front;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		this->Position -= glm::normalize(glm::cross(this->Front, this->Up)) * cameraSpeed;
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		this->Position += glm::normalize(glm::cross(this->Front, this->Up)) * cameraSpeed;
-	}
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        this->Position += cameraSpeed * flatFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        this->Position -= cameraSpeed * flatFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        this->Position -= cameraSpeed * flatRight;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        this->Position += cameraSpeed * flatRight;
+    }
 }
 
 void Camera::onMouseEvent(GLfloat xoffset, GLfloat yoffset, GLboolean constraintPitch = GL_TRUE)

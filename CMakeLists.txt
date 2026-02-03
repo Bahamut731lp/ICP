@@ -25,7 +25,12 @@ file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(app main.cpp ${SOURCES})
 
 # Include dirs
-target_include_directories(app PRIVATE ${OpenCV_INCLUDE_DIRS})
+# Better include handling
+target_include_directories(app PRIVATE 
+    "${PROJECT_SOURCE_DIR}/src"
+    "${PROJECT_SOURCE_DIR}/src/lib" # This specifically fixes your miniaudio error
+    ${OpenCV_INCLUDE_DIRS}
+)
 
 # 2. Linkování knihoven
 # Všimni si, že přidávám imgui::imgui. 

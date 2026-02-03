@@ -1,10 +1,12 @@
 #pragma once
 
+#include <vector>
 #include "light_system.hpp"
 #include "render.hpp"
 #include "model.hpp"
 #include "scene.hpp"
-
+#include "audio/audio_manager.hpp"
+#include "physics.hpp" 
 class World {
 public:	
 	static void init();
@@ -19,6 +21,7 @@ private:
 	static AmbientLight* ambience;
 	static PointLight* simpleLight2, * simpleLight3;
 	static DirectionalLight* sunlight;
+	static AudioManager audio_manager;
 	static Model* coin;
 	static Model* terrain;
 	static Model* glass;

@@ -8,6 +8,7 @@
 #include "model.hpp"
 #include "logger.hpp"
 #include "obj_loader.hpp"
+#include <limits>
 
 Model::Model(const std::filesystem::path& filename)
 {
@@ -36,6 +37,31 @@ Model::Model(const Model& copy)
 
 Model::Model()
 {
+}
+
+AABB Model::calculateAABB()
+{
+    glm::vec3 minBound(std::numeric_limits<float>::max());
+    glm::vec3 maxBound(std::numeric_limits<float>::lowest());
+
+    for (const auto& mesh : meshes)
+    {
+        for (const auto& vertex : mesh.vertices)
+        {
+            // We transform the local vertex position into world space 
+            // using the model's current transform matrix.
+            glm::vec4 worldPos = transform * glm::vec4(vertex.Position, 1.0f);
+
+            minBound.x = std::min(minBound.x, worldPos.x);
+            minBound.y = std::min(minBound.y, worldPos.y);
+            minBound.z = std::min(minBound.z, worldPos.z);
+
+            maxBound.x = std::max(maxBound.x, worldPos.x);
+            maxBound.y = std::max(maxBound.y, worldPos.y);
+            maxBound.z = std::max(maxBound.z, worldPos.z);
+        }
+    }
+    return AABB{ minBound, maxBound };
 }
 
 void Model::submit(Shader& shader)

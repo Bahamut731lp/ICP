@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include "physics.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -20,5 +21,6 @@ public:
 	Model();
 
 	void submit(Shader& shader);
+	AABB calculateAABB();
 };
 
