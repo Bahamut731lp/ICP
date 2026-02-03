@@ -117,6 +117,10 @@ GLuint Shader::compile_shader(const std::filesystem::path& source_file, const GL
 {
 	GLuint shader_h = glCreateShader(type);
 	std::string shader_string = textFileRead(source_file);
+	size_t pos = shader_string.find("#version 460");
+    if (pos != std::string::npos) {
+        shader_string.replace(pos, 12, "#version 410");
+    }
 	const char* shader_c_str = shader_string.c_str();
 	glShaderSource(shader_h, 1, &shader_c_str, NULL);
 	glCompileShader(shader_h);

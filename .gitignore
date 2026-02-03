@@ -15,3 +15,5 @@ build
 app
 .vscode
 vcpkg_installed
+vcpkg-manifest-install.log
+.DS_Store
