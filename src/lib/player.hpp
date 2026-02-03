@@ -26,7 +26,7 @@ public:
 
 private:
     float gravity = 20.0f;
-    float jumpForce = 8.0f;
+    float jumpForce = 12.0f;
     float height = 1.8f;
     float stepTimer = 0.0f;
     bool isGrounded = false;

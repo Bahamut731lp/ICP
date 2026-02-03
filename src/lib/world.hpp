@@ -25,4 +25,5 @@ private:
 	static Model* coin;
 	static Model* terrain;
 	static Model* glass;
+	static std::vector<Model*> crates;
 };
