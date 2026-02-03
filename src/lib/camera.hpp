@@ -10,6 +10,11 @@ enum Camera_Movement {
 	RIGHT
 };
 
+enum Camera_Mode {
+	FIRST_PERSON,
+	STATIC
+};
+
 class Camera
 {
 public:
@@ -32,7 +37,7 @@ public:
 	GLfloat MouseSensitivity;
 	GLfloat Zoom;
 
-	// TODO: Tohle se pak mus� p�esunout jinam
+	Camera_Mode mode;
 	GLfloat SprintFactor;
 
 	// Constructor

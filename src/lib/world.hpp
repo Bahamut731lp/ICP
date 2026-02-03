@@ -8,8 +8,8 @@
 class World {
 public:	
 	static void init();
-	static Scene render(GlRender* window, float delta);
-	static Scene load(GlRender* window, std::shared_ptr<int> progress);
+	static Scene render(float delta);
+	static Scene load(Renderer* window, std::shared_ptr<int> progress);
 	static Shader* material;
 
 private:

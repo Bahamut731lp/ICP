@@ -15,76 +15,77 @@
 #include "logger.hpp"
 #include "camera.hpp"
 
-class GlRender
+enum CursorMode {
+    LOCKED,
+    FREE
+};
+
+class Renderer
 {
 public:
-    GlRender();
-   ~GlRender();
+    Renderer();
+   ~Renderer();
 
-    void setScale(float s);
-    void setSize(int width, int height);
-    void setFullscreen(bool fullscreen);
-    void setVsync(bool vsync);
-    void setMaximization(bool maximized);
-    void setAntialiasing(bool antialiased);
+    static bool isVSynced();
+    static bool isFullscreen();
+    static bool isMaximized();
+    static bool isAntialiased();
 
-    void getScreenshot() const;
-    int getWidth() const;
-    int getHeight() const;
+    static void getScreenshot();
+    static int getWidth();
+    static int getHeight();
 
-    std::string version;
-    std::string profile;
-    std::string renderer;
-    std::string vendor;
-    std::string shadingLanguage;
+    static void setScale(float s);
+    static void setSize(int width, int height);
+    static void setFullscreen(bool fullscreen);
+    static void setVsync(bool vsync);
+    static void setMaximization(bool maximized);
+    static void setAntialiasing(bool antialiased);
+    static void setCursor(CursorMode cursor);
 
-    bool isVSynced() const;
-    bool isFullscreen() const;
-    bool isMaximized() const;
-    bool isAntialiased() const;
+    static std::string version;
+    static std::string profile;
+    static std::string renderer;
+    static std::string vendor;
+    static std::string shadingLanguage;
 
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-    void init();
+    static void init();
 
     // Variables for camera movement
-    static Camera *cam; 
+    static Camera *camera; 
     static bool isMouseMoved;
     static float lastX;
     static float lastY;
     
     GLuint getTextureID(const cv::Mat &mat);
-    GLFWwindow *window = nullptr;
+    
+    static GLFWwindow *window;
 private:
-    std::string winname = "ICP";
-    std::array<int,2>  winPos = {0,0};
-    int  fps       = 60;
-    int  winWidth     = 1280;
-    int  winHeight    = 720;
+    static std::string name;
+    static std::array<int,2> position;
+    static int winWidth;
+    static int winHeight;
+    static float winScale;
 
     // Window position & size restoration
-    int lastWindowX;
-    int lastWindowY;
-    int lastWindowWidth;
-    int lastWindowHeight;
+    static int lastWindowX;
+    static int lastWindowY;
+    static int lastWindowWidth;
+    static int lastWindowHeight;
 
-    bool initialized  = false;
-    bool running      = false;
-    bool fullscreen   = false;
-    bool vsync        = false;
-    bool maximized    = false;
-    bool antialiased  = false;
+    static bool fullscreen; 
+    static bool vsync;
+    static bool maximized;
+    static bool antialiased;
     
-    float winScale     = 0.5;
-
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void handle_key_press(int key, int action);
-    void onKeyEvent(int key, int action);
 
-    void setImguiParameters();
-    void setWindowHints();
-    void setGlfwFeatures();
-    void setGlfwWindowInstance();
-    void setGlfwCallbacks();
+    static void setImguiParameters();
+    static void setWindowHints();
+    static void setGlfwFeatures();
+    static void setGlfwWindowInstance();
+    static void setGlfwCallbacks();
 };

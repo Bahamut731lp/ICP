@@ -20,6 +20,7 @@ Camera::Camera(glm::vec3 position)
 	this->MovementSpeed = 10.0f;
 	this->SprintFactor = 3.0f;
 	this->MouseSensitivity = 0.1f;
+	this->mode = Camera_Mode::FIRST_PERSON;
 
 	// initialization of the camera reference system
 	this->updateCameraVectors();
@@ -43,6 +44,16 @@ void Camera::onKeyboardEvent(GLFWwindow* window, GLfloat deltaTime)
 
 	float cameraSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? SprintFactor : 1) * MovementSpeed * deltaTime;
 
+	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+		this->mode = Camera_Mode::STATIC;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		this->mode = Camera_Mode::FIRST_PERSON;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		this->Position += cameraSpeed * this->Front;
 	}
@@ -59,6 +70,10 @@ void Camera::onKeyboardEvent(GLFWwindow* window, GLfloat deltaTime)
 
 void Camera::onMouseEvent(GLfloat xoffset, GLfloat yoffset, GLboolean constraintPitch = GL_TRUE)
 {
+	if (this->mode == Camera_Mode::STATIC) {
+		return;
+	}
+
 	xoffset *= this->MouseSensitivity;
 	yoffset *= this->MouseSensitivity;
 

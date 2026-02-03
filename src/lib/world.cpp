@@ -17,7 +17,7 @@ void World::init()
 {
 	// Create camera
 	camera = new Camera{ glm::vec3(0.0f, 0.0f, 10.0f) };
-	GlRender::cam = camera;
+	Renderer::camera = camera;
 
 	material = new Shader(
 		std::filesystem::path("resources/shaders/material.vert"),
@@ -59,7 +59,7 @@ void World::init()
 	lights->add(*material);
 }
 
-Scene World::render(GlRender* GlRender, float delta)
+Scene World::render(float delta)
 {
 	const int ONE_DAY = 16;
 	const auto gametime = glfwGetTime();
@@ -77,19 +77,19 @@ Scene World::render(GlRender* GlRender, float delta)
 
 	lights->calc();
 
-	terrain->render(*camera, *material);
-	glass->render(*camera, *material);
-	coin->render(*camera, *material);
+	terrain->render(*Renderer::camera, *material);
+	glass->render(*Renderer::camera, *material);
+	coin->render(*Renderer::camera, *material);
 
 	return Scene::SceneWorld;
 }
 
-Scene World::load(GlRender* GlRender, std::shared_ptr<int> progress)
+Scene World::load(Renderer* Renderer, std::shared_ptr<int> progress)
 {
 	// Used to be thread here, but I just gave up trying to make it work with OpenGL.
 	if (*progress == 1) {
 		World::init();
-		glfwSetInputMode(GlRender->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetInputMode(Renderer->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		return Scene::SceneWorld;
 	}
 
