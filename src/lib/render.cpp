@@ -15,13 +15,9 @@ bool Renderer::fullscreen = false;
 bool Renderer::isMouseMoved = false;
 
 int Renderer::lastWindowX = 0;
-;
 int Renderer::lastWindowY = 0;
-;
 int Renderer::lastWindowWidth = 0;
-;
 int Renderer::lastWindowHeight = 0;
-;
 int Renderer::winWidth = 1280;
 int Renderer::winHeight = 720;
 

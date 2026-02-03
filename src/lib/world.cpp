@@ -26,6 +26,7 @@ static std::vector<AABB> collisionBoxes;
 void World::init()
 {
 	player = new Player(glm::vec3(0.0f, 10.0f, 10.0f));
+	Renderer::camera = &player->camera;
 
 	audio_manager.load_BGM("minecraft", "resources/audio/minecraft_bg.mp3", 1.0f);
 	audio_manager.play_BGM("minecraft", 0.1f);
@@ -114,6 +115,7 @@ Scene World::calculate(float delta)
     }
 
     lights->calc();
+
 	terrain->submit(*material);
 	glass->submit(*material);
     

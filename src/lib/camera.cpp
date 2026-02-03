@@ -46,7 +46,6 @@ void Camera::onKeyboardEvent(GLFWwindow* window, GLfloat deltaTime)
     glm::vec3 flatFront = glm::normalize(glm::vec3(this->Front.x, 0.0f, this->Front.z));
     glm::vec3 flatRight = glm::normalize(glm::vec3(this->Right.x, 0.0f, this->Right.z));
 	
-
 	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
 		Renderer::setCursor(FREE);
 	}

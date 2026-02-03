@@ -56,7 +56,6 @@ int main()
             break;
         
         World::calculate(delta);
-
         Renderer::execute(*World::material);
         GUI::render();
 

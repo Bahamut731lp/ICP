@@ -2,8 +2,6 @@
 #include <filesystem>
 #include <vector>
 #include "physics.hpp"
-
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 
