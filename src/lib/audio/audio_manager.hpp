@@ -32,7 +32,7 @@ public:
     void load(const std::string& name, const std::filesystem::path& filename, 
               float min_distance, float max_distance, float volume);
     void load_BGM(const std::string& name, const std::filesystem::path& filename, float volume);
-    
+    bool play(const std::string &name);
     bool play_3D(const std::string& name, float x, float y, float z);
     bool play_BGM(const std::string& name, float volume);
     

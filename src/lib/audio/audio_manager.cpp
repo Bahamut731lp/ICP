@@ -142,6 +142,25 @@ bool AudioManager::play_BGM(const std::string &name, float volume)
     return true;
 }
 
+bool AudioManager::play(const std::string &name)
+{
+    auto it = sound_bank.find(name);
+    if (it == sound_bank.end()) return false;
+
+    auto instance = make_managed_sound();
+
+    if (ma_sound_init_copy(&engine, it->second.get(), 0, nullptr, instance.get()) != MA_SUCCESS) {
+        return false;
+    }
+
+    ma_sound_set_spatialization_enabled(instance.get(), MA_FALSE);
+    
+    ma_sound_set_volume(instance.get(), ma_sound_get_volume(it->second.get()));
+
+    ma_sound_start(instance.get());
+    active_sounds.push_back(std::move(instance));
+    return true;
+}
 void AudioManager::stop_BGM()
 {
     if (current_bgm)

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <vector>
 #include "light_system.hpp"
 #include "render.hpp"
 #include "model.hpp"
 #include "scene.hpp"
 #include "audio/audio_manager.hpp"
+#include "physics.hpp" 
 class World {
 public:	
 	static void init();
