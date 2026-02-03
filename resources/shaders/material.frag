@@ -175,6 +175,10 @@ void main()
 {
     vec3 accumulator = vec3(0.0);
     vec3 norm = normalize(Normal);
+    if (!gl_FrontFacing) {
+        norm = -norm;
+    }
+
     vec3 viewDir = normalize(viewPos - FragPos);
 
     for (int i = 0; i < MAX_AMBIENT_LIGHTS; i++) {

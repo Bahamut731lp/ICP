@@ -36,7 +36,13 @@ int main()
     
     while (1)
     {
+        // 1. Events
         glfwPollEvents();
+        Renderer::camera->onKeyboardEvent(Renderer::window, delta);
+
+        // 2. Clear the frame
+        RenderQueue frameQueue;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float currentFrame = glfwGetTime();
         delta = currentFrame - lastFrame;
@@ -46,16 +52,13 @@ int main()
         glfwGetFramebufferSize(Renderer::window, &width, &height);        
         glViewport(0, 0, width, height);
 
-        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
         if (glfwWindowShouldClose(Renderer::window))
             break;
         
-        World::render(delta);
-        GUI::render();
+        World::calculate(delta);
 
-	    Renderer::camera->onKeyboardEvent(Renderer::window, delta);
+        Renderer::execute(*World::material);
+        GUI::render();
 
         // Draw ImGui over your scene
         glfwSwapBuffers(Renderer::window);

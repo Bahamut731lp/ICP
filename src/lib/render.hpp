@@ -14,10 +14,27 @@
 
 #include "logger.hpp"
 #include "camera.hpp"
+#include "mesh.hpp"
 
 enum CursorMode {
     LOCKED,
     FREE
+};
+
+struct RenderCommand {
+    Mesh* mesh;
+    glm::mat4 transform;
+    float distance;
+};
+
+struct RenderQueue {
+    std::vector<RenderCommand> opaque;
+    std::vector<RenderCommand> transparent;
+
+    void clear() {
+        opaque.clear();
+        transparent.clear();
+    }
 };
 
 class Renderer
@@ -49,13 +66,22 @@ public:
     static std::string vendor;
     static std::string shadingLanguage;
 
+    static RenderQueue queue;
+
+    static std::vector<RenderCommand> opaque;
+    static std::vector<RenderCommand> transparent;
+
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
     static void init();
+    static void submit(RenderCommand command);
+    static void execute(Shader& shader);
+
+    static void draw(const RenderCommand& cmd, Shader& shader);
 
     // Variables for camera movement
-    static Camera *camera; 
+    static Camera *camera;
     static bool isMouseMoved;
     static float lastX;
     static float lastY;

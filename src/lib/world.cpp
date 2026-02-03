@@ -59,7 +59,7 @@ void World::init()
 	lights->add(*material);
 }
 
-Scene World::render(float delta)
+Scene World::calculate(float delta)
 {
 	const int ONE_DAY = 16;
 	const auto gametime = glfwGetTime();
@@ -77,9 +77,9 @@ Scene World::render(float delta)
 
 	lights->calc();
 
-	terrain->render(*Renderer::camera, *material);
-	glass->render(*Renderer::camera, *material);
-	coin->render(*Renderer::camera, *material);
+	terrain->submit(*material);
+	glass->submit(*material);
+	coin->submit(*material);
 
 	return Scene::SceneWorld;
 }

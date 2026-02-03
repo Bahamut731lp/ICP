@@ -19,6 +19,6 @@ public:
 	Model(const Model& copy);
 	Model();
 
-	void render(Camera& camera, Shader& shader);
+	void submit(Shader& shader);
 };
 
