@@ -13,6 +13,10 @@ Model* World::coin = nullptr;
 Model* World::terrain = nullptr;
 Model* World::glass = nullptr;
 
+AudioManager World::audio_manager;
+
+
+static bool coin_collected = false;
 void World::init()
 {
 	// Create camera
@@ -23,11 +27,24 @@ void World::init()
 		std::filesystem::path("resources/shaders/material.vert"),
 		std::filesystem::path("resources/shaders/material.frag")
 	);
+
+	// audio
+	audio_manager.load("soul", "resources/audio/soul.mp3", 3.0f, 20.0f, 1.0f);
+	audio_manager.load_BGM("minecraft", "resources/audio/minecraft_bg.mp3", 1.0f);
+	audio_manager.play_BGM("minecraft", 0.1f);
 	
 	// Load all models needed for scene
 	terrain = new Model("resources/obj/level_1.obj");
 	glass = new Model("resources/obj/glass.obj");
 	coin = new Model("resources/obj/coin.obj");
+
+	for (int i = 1; i <= 8; i++) 
+    {
+        std::string id = "step" + std::to_string(i);
+        std::string path = "resources/audio/stepdirt_" + std::to_string(i) + ".wav";
+        
+        audio_manager.load(id, path, 1.0f, 10.0f, 0.04f);
+    }
 
 	// Define lights
 	lights = new LightSystem;
@@ -59,29 +76,75 @@ void World::init()
 	lights->add(*material);
 }
 
+static glm::vec3 last_position = glm::vec3(0.0f);
+static float step_timer = 0.0f;
+static float step_interval = 0.5f; // Play a sound every 0.5 seconds
 Scene World::render(GlRender* GlRender, float delta)
 {
-	const int ONE_DAY = 16;
-	const auto gametime = glfwGetTime();
-	auto daytime = glm::sin(((2 * glm::pi<float>() / ONE_DAY) * gametime));
+    const int ONE_DAY = 16;
+    const auto gametime = glfwGetTime();
+    auto daytime = glm::sin(((2 * glm::pi<float>() / ONE_DAY) * gametime));
+    auto sine_wave = glm::sin(glm::pi<float>() * glfwGetTime());
 
-	auto sine_wave = glm::sin(glm::pi<float>() * glfwGetTime());
+	audio_manager.set_listener_position(
+        camera->Position.x, camera->Position.y, camera->Position.z,
+        camera->Front.x,    camera->Front.y,    camera->Front.z
+    );
 
-	// Sunlight movement
-	// Send light data to shaders
-	simpleLight2->position.x = 30.0f + 20 * daytime;
+	// Check if player moved
+    float distance_moved = glm::distance(camera->Position, last_position);
+    bool is_moving = distance_moved > 0.001f; 
 
-	coin->transform = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 5.0f, 2.5f));
-	coin->transform = glm::rotate(coin->transform, (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-	glass->transform = glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 5 + sine_wave, 2.0f));
+    if (is_moving)
+    {
+        step_timer -= delta; 
 
-	lights->calc();
+        if (step_timer <= 0.0f)
+        {
+            int r = (rand() % 8) + 1; 
+            std::string sound_name = "step" + std::to_string(r);
 
-	terrain->render(*camera, *material);
-	glass->render(*camera, *material);
-	coin->render(*camera, *material);
+            audio_manager.play_3D(sound_name, camera->Position.x, camera->Position.y- 3.7f, camera->Position.z);
 
-	return Scene::SceneWorld;
+            bool is_sprinting = glfwGetKey(GlRender->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+            step_timer = is_sprinting ? 0.3f : 0.5f;
+        }
+    }
+    else
+    {
+        step_timer = 0.0f; 
+    }
+
+    last_position = camera->Position;
+
+
+    simpleLight2->position.x = 30.0f + 20 * daytime;
+    glass->transform = glm::translate(glm::mat4(1.0f), glm::vec3(18.0f, 5 + sine_wave, 2.0f));
+
+    glm::vec3 coinPos = glm::vec3(-2.0f, 1.0f, 2.5f);
+    if (!coin_collected) 
+    {
+        coin->transform = glm::translate(glm::mat4(1.0f), coinPos);
+        coin->transform = glm::rotate(coin->transform, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        float dist = glm::distance(camera->Position, coinPos);
+        if (dist < 4.0f) 
+        {
+            audio_manager.play_3D("soul", coinPos.x, coinPos.y, coinPos.z);
+            coin_collected = true; 
+        }
+    }
+
+    lights->calc();
+
+    terrain->render(*camera, *material);
+    glass->render(*camera, *material);
+    
+    if (!coin_collected) {
+        coin->render(*camera, *material);
+    }
+
+    return Scene::SceneWorld;
 }
 
 Scene World::load(GlRender* GlRender, std::shared_ptr<int> progress)
