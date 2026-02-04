@@ -13,15 +13,10 @@
 #include "src/lib/camera.hpp"
 #include "src/lib/world.hpp"
 #include "src/lib/audio.hpp"
+#include "src/lib/video.hpp"
 
-#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <thread>
-
-std::thread audio_thread;
-std::thread event_thread;
-std::thread gui_thread;
-std::thread SoundThread;
 
 float clear_color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 float delta = 0.0f;
@@ -30,9 +25,9 @@ float lastFrame = 0.0f;
 int main()
 {
     Logger::info("App has started");
-    cv::VideoCapture capture = cv::VideoCapture(0, cv::CAP_ANY);
     
     Audio::init();
+    Video::init();
 
     Renderer::init();
     World::init();
@@ -75,5 +70,6 @@ int main()
     glfwTerminate();
 
     Audio::shutdown();
+    Video::shutdown();
     return 0;
 }

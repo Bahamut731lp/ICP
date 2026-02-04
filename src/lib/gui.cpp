@@ -1,4 +1,5 @@
 #include "gui.hpp"
+#include "video.hpp"
 
 void GUI::render()
 {
@@ -52,7 +53,39 @@ void GUI::render()
     if (ImGui::Button("Close App")) {
         glfwSetWindowShouldClose(Renderer::window, true);
     }
-    
+
+    ImGui::Separator();
+
+    cv::Mat frame;
+    if (Video::getFrame(frame) && !frame.empty()) {
+        // 1. Prepare the data (OpenCV BGR -> OpenGL RGB)
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+
+        // 2. Bind the existing texture ID
+        GLuint texID = Video::getTextureId();
+        glBindTexture(GL_TEXTURE_2D, texID);
+
+        // 3. Ensure the texture state is valid (Important for some drivers)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        // 4. Update the texture pixels
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        
+        // We use glTexImage2D if the frame size might change, 
+        // or glTexSubImage2D for better performance if size is constant.
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGB, 
+            frame.cols, frame.rows, 0, 
+            GL_RGB, GL_UNSIGNED_BYTE, 
+            frame.data
+        );
+    }
+
+    // 5. Draw the final result
+    ImTextureID imguiID = (ImTextureID)(intptr_t)Video::getTextureId();
+    ImGui::Image(imguiID, ImVec2(320, 240));
+
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());    
