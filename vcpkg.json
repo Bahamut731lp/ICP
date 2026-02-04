@@ -4,13 +4,7 @@
     "glfw3",
     "glm",
     {
-      "name": "opencv4",
-      "default-features": false,
-      "features": [
-        "jpeg",
-        "png",
-        "quirc"
-      ]
+      "name": "opencv4"
     },
     "opengl",
     {

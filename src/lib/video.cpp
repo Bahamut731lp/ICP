@@ -9,13 +9,22 @@ cv::Mat Video::frame;
 bool Video::is_frame_ready = false;
 cv::VideoCapture Video::capture; // Standard object initialization
 GLuint Video::textureId = 0;
-
+cv::Ptr<cv::FaceDetectorYN> Video::detector; 
 void Video::init()
 {
     if (is_running)
         return;
 
     is_running = true;
+
+    Video::detector = cv::FaceDetectorYN::create(
+        "resources/face_detection_yunet_2023mar.onnx",
+        "",
+        cv::Size(640, 480),
+        0.9f,
+        0.3f,
+        5000
+    );
     
     // Inside your Video initialization logic:
     glGenTextures(1, &textureId);
@@ -61,6 +70,25 @@ void Video::loop()
         
         if (!is_ok) {
             continue;
+        }
+
+        cv::Mat faces;
+        detector->setInputSize(current_frame.size());
+        detector->detect(current_frame, faces);
+
+        for (int i = 0; i < faces.rows; i++) {
+            float x = faces.at<float>(i, 0);
+            float y = faces.at<float>(i, 1);
+            float w = faces.at<float>(i, 2);
+            float h = faces.at<float>(i, 3);
+            float score = faces.at<float>(i, 14);
+
+            cv::Scalar color = cv::Scalar(0, 255, 0); // Green
+            cv::rectangle(current_frame, cv::Rect(int(x), int(y), int(w), int(h)), color, 2);
+
+            std::string label = cv::format("Face: %.2f", score);
+            cv::putText(current_frame, label, cv::Point(int(x), int(y) - 10), 
+                        cv::FONT_HERSHEY_SIMPLEX, 0.5, color, 1);
         }
 
         cv::cvtColor(current_frame, current_frame, cv::COLOR_BGR2RGB);

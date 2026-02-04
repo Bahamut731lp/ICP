@@ -9,6 +9,7 @@
 #include <atomic>
 #include <queue>
 #include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
 
 class Video {
 public:
@@ -28,4 +29,5 @@ private:
     static bool is_frame_ready;
     static cv::VideoCapture capture; 
     static GLuint textureId;
+    static cv::Ptr<cv::FaceDetectorYN> detector;
 };
