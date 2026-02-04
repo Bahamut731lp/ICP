@@ -12,6 +12,7 @@
 #include "src/lib/fps_meter.hpp"
 #include "src/lib/camera.hpp"
 #include "src/lib/world.hpp"
+#include "src/lib/audio.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -30,10 +31,12 @@ int main()
 {
     Logger::info("App has started");
     cv::VideoCapture capture = cv::VideoCapture(0, cv::CAP_ANY);
+    
+    Audio::init();
 
     Renderer::init();
     World::init();
-    
+
     while (1)
     {
         // 1. Events
@@ -70,5 +73,7 @@ int main()
 
     glfwDestroyWindow(Renderer::window);
     glfwTerminate();
+
+    Audio::shutdown();
     return 0;
 }

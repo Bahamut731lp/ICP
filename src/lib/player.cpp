@@ -14,14 +14,8 @@ AABB Player::getHitbox() const
         camera.Position + glm::vec3(0.3f, 0.0f, 0.3f)};
 }
 
-void Player::update(float delta, GLFWwindow *window, AudioManager &audio, const std::vector<AABB> &worldBoxes)
+void Player::update(float delta, GLFWwindow *window, const std::vector<AABB> &worldBoxes)
 {
-
-    // 1. Audio Listener Setup
-    audio.set_listener_position(
-        camera.Position.x, camera.Position.y, camera.Position.z,
-        camera.Front.x, camera.Front.y, camera.Front.z);
-
     glm::vec3 posBeforeFrame = camera.Position;
 
     // --- PHASE A: VERTICAL (Gravity & Landing) ---
@@ -43,7 +37,7 @@ void Player::update(float delta, GLFWwindow *window, AudioManager &audio, const 
             {
                 if (velocity.y < -5.0f)
                 {
-                    audio.play_3D("land", camera.Position.x, camera.Position.y - height, camera.Position.z);
+                    //audio.play_3D("land", camera.Position.x, camera.Position.y - height, camera.Position.z);
                 }
                 camera.Position.y = box.max.y + 0.001f; // Snap to surface
                 velocity.y = 0;
@@ -63,7 +57,7 @@ void Player::update(float delta, GLFWwindow *window, AudioManager &audio, const 
     {
         if (velocity.y < -4.0f)
         {
-            audio.play_3D("land", camera.Position.x, 1.7f - height, camera.Position.z);
+            //audio.play_3D("land", camera.Position.x, 1.7f - height, camera.Position.z);
         }
         camera.Position.y = 1.7f;
         velocity.y = 0;
@@ -77,7 +71,7 @@ void Player::update(float delta, GLFWwindow *window, AudioManager &audio, const 
     {
         velocity.y = jumpForce;
         isGrounded = false;
-        audio.play_3D("jump", camera.Position.x, camera.Position.y, camera.Position.z);
+        //audio.play_3D("jump", camera.Position.x, camera.Position.y, camera.Position.z);
     }
 
     // --- PHASE B: HORIZONTAL (WASD & Walls) ---
@@ -112,7 +106,7 @@ void Player::update(float delta, GLFWwindow *window, AudioManager &audio, const 
         {
             stepTimer = 0.0f;
             int r = (rand() % 8) + 1;
-            audio.play("step" + std::to_string(r));
+            //audio.play("step" + std::to_string(r));
         }
     }
 

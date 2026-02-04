@@ -28,7 +28,7 @@ add_executable(app main.cpp ${SOURCES})
 # Better include handling
 target_include_directories(app PRIVATE 
     "${PROJECT_SOURCE_DIR}/src"
-    "${PROJECT_SOURCE_DIR}/src/lib" # This specifically fixes your miniaudio error
+    "${PROJECT_SOURCE_DIR}/src/lib"
     ${OpenCV_INCLUDE_DIRS}
 )
 

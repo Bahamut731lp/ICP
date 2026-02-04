@@ -19,7 +19,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd -s 5 5 0 resources/textures/StoneFloorTexture.png
+map_Kd -s 25 25 0 resources/textures/stone.png
 
 newmtl Material.004
 Ns 15.061984
@@ -29,7 +29,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd -s 30 30 1 resources/textures/grass2.png
+map_Kd -s 250 250 1 resources/textures/grass.png
 
 newmtl Red_Wood
 Ns 250.000000

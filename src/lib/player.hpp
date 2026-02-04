@@ -5,14 +5,13 @@
 #include <vector>
 
 #include "camera.hpp"
-#include "audio/audio_manager.hpp"
 #include "physics.hpp" 
 
 class Player {
 public:
     Player(glm::vec3 startPos);
 
-    void update(float delta, GLFWwindow* window, AudioManager& audio, const std::vector<AABB>& worldBoxes);
+    void update(float delta, GLFWwindow* window, const std::vector<AABB>& worldBoxes);
     AABB getHitbox() const;
 
     Camera camera;
@@ -22,7 +21,7 @@ public:
 private:
     float gravity = 20.0f;
     float jumpForce = 8.0f;
-    float height = 1.8f;
+    float height = 4.0f;
     float stepTimer = 0.0f;
     bool isGrounded = false;
 };

@@ -1,6 +1,8 @@
 #include "world.hpp"
 #include "player.hpp"
 #include "logger.hpp"
+#include "audio.hpp"
+
 #include <thread>
 #include <vector>
 
@@ -19,7 +21,6 @@ Model *World::coin = nullptr;
 Model *World::terrain = nullptr;
 Model *World::glass = nullptr;
 
-AudioManager World::audio_manager;
 static bool coin_collected = false;
 static std::vector<AABB> collisionBoxes;
 
@@ -28,7 +29,7 @@ void World::init()
 	player = new Player(glm::vec3(0.0f, 10.0f, 10.0f));
 	Renderer::camera = &player->camera;
 
-	audio_manager.load_BGM("minecraft", "resources/audio/minecraft_bg.mp3", 1.0f);
+	/*audio_manager.load_BGM("minecraft", "resources/audio/minecraft_bg.mp3", 1.0f);
 	audio_manager.play_BGM("minecraft", 0.1f);
 
 	audio_manager.load("jump", "resources/audio/jump.mp3", 1.0f, 10.0f, 0.8f);
@@ -39,7 +40,7 @@ void World::init()
 	for (int i = 1; i <= 8; i++)
 	{
 		audio_manager.load("step" + std::to_string(i), "resources/audio/stepdirt_" + std::to_string(i) + ".wav", 1.0f, 10.0f, 0.04f);
-	}
+	}*/
 
 	material = new Shader("resources/shaders/material.vert", "resources/shaders/material.frag");
 	terrain = new Model("resources/obj/level_1.obj");
@@ -74,6 +75,8 @@ void World::init()
 	lights->add(simpleLight2);
 	lights->add(sunlight);
 	lights->add(*material);
+
+	Audio::play("resources/audio/minecraft_bg.mp3", glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 Scene World::calculate(float delta)
@@ -98,7 +101,7 @@ Scene World::calculate(float delta)
     collisionBoxes.push_back(glass->calculateAABB());
 
     if (player) {
-        player->update(delta, Renderer::window, audio_manager, collisionBoxes);
+        player->update(delta, Renderer::window, collisionBoxes);
     }
 
 
@@ -108,7 +111,7 @@ Scene World::calculate(float delta)
         if (player && player->getHitbox().intersects(coinBox)) 
         {
             glm::vec3 coinCenter = (coinBox.min + coinBox.max) * 0.5f;
-            audio_manager.play_3D("soul", coinCenter.x, coinCenter.y, coinCenter.z);
+            //audio_manager.play_3D("soul", coinCenter.x, coinCenter.y, coinCenter.z);
             
             coin_collected = true; 
         }

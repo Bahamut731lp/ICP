@@ -1,5 +1,7 @@
 #include "render.hpp"
 #include "logger.hpp"
+#include "audio.hpp"
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -7,7 +9,7 @@
 
 Camera *Renderer::camera = nullptr;
 GLFWwindow *Renderer::window = nullptr;
-
+CursorMode Renderer::cursor = LOCKED;
 bool Renderer::antialiased = false;
 bool Renderer::maximized = false;
 bool Renderer::vsync = false;
@@ -84,6 +86,8 @@ void window_maximize_callback(GLFWwindow *window, int maximized)
 
 void Renderer::setCursor(CursorMode cursor)
 {
+    Renderer::cursor = cursor;
+
     switch (cursor)
     {
     case FREE:
@@ -183,6 +187,7 @@ void Renderer::setGlfwCallbacks()
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetWindowMaximizeCallback(window, window_maximize_callback);
     glfwSetCursorPosCallback(window, Renderer::mouse_callback);
+    glfwSetKeyCallback(window, Renderer::key_callback);
 }
 
 void Renderer::init()
@@ -384,6 +389,20 @@ void Renderer::mouse_button_callback(GLFWwindow *window, int button, int action,
     }
 }
 
+void Renderer::key_callback(GLFWwindow * window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_PRESS) {
+        if (key == GLFW_KEY_V) {
+            Renderer::setCursor(FREE);
+            Audio::play("resources/audio/click.mp3");
+        }
+        if (key == GLFW_KEY_C) {
+            Renderer::setCursor(LOCKED);
+            Audio::play("resources/audio/click.mp3");
+        }
+    }
+}
+
 void Renderer::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
     // Check if any camera was assigned to the window,
@@ -448,6 +467,9 @@ void Renderer::draw(const RenderCommand &cmd, Shader &shader)
 
 void Renderer::execute(Shader &shader)
 {
+    // Update Audio
+    Audio::updateListener(camera->Position, camera->Front);
+
     std::sort(queue.opaque.begin(), queue.opaque.end(), [](const RenderCommand &a, const RenderCommand &b)
               { return a.distance < b.distance; });
 

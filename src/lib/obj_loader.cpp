@@ -419,6 +419,13 @@ void OBJLoader::Parse::texture(std::vector<std::string> input, Material& output)
         format = GL_RED; // Grayscale
     }
 
+	for (size_t i = 0; i < input.size(); ++i) {
+        if (input[i] == "-s" && i + 2 < input.size()) {
+            texture.scale.x = std::stof(input[i + 1]);
+            texture.scale.y = std::stof(input[i + 2]);
+        }
+    }
+
     // 3. OpenGL Setup
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
